@@ -15,6 +15,13 @@ def _get_match_groups(ping_output, regex):
         raise Exception('Invalid PING output:\n' + ping_output)
     return match.groups()
 
+def get_all(ping_output):
+    matcher = re.compile(r'time=(\d+.\d+)')
+    match = matcher.findall(ping_output)
+    if not match:
+        raise Exception('Invalid PING output:\n' + ping_output)
+    return match
+
 def parse(ping_output):
     """
     Parses the `ping_output` string into a dictionary containing the following
@@ -71,6 +78,9 @@ def main(argv=sys.argv):
 
     Default FORMAT is %h,%s,%r,%m,%a,%M,%j""")
     parser.add_option_group(format_group)
+    parser.add_option("-a", "--all", 
+                          action="store_true", dest="get_all", default=False,
+                          help="Print each ping result as a single value")
 
     (options, args) = parser.parse_args()
 
@@ -100,6 +110,10 @@ def main(argv=sys.argv):
 
     for (fmt, rep) in format_replacements:
         output = output.replace(fmt, rep)
+
+    if options.get_all == True:
+        values = get_all(ping_output)
+        output = '\n'.join(i for i in values)
 
     sys.stdout.write(output)
 
